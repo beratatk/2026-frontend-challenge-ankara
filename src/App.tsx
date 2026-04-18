@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useInvestigation } from '@/hooks/useInvestigation';
 import { applyFilters, emptyFilters, type Filters } from '@/lib/filter';
 import { Header } from '@/components/Header';
+import { HeroCard } from '@/components/HeroCard';
 import { SummaryStrip } from '@/components/SummaryStrip';
 import { LeftRail } from '@/components/LeftRail';
 import { Feed } from '@/components/Feed';
@@ -124,11 +125,15 @@ export default function App() {
         isRetrying={isRetrying}
         onRetry={retryFailed}
       />
+      <HeroCard
+        subject={subject}
+        insights={insights}
+        onSelectPerson={onSelectPerson}
+        onSelectLocation={onSelectLocation}
+      />
       <SummaryStrip
         insights={insights}
         onSelectPerson={onSelectPerson}
-        onSelectRecord={onSelectRecord}
-        onSelectLocation={onSelectLocation}
         onApplyFilters={onApplyFilters}
       />
       <MobileTabs
