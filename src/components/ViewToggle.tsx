@@ -18,7 +18,7 @@ export function ViewToggle({
   mapCount,
 }: Props) {
   return (
-    <div className="inline-flex self-start rounded-md border border-slate-800 bg-slate-900/70 p-0.5">
+    <div className="inline-flex self-center rounded-md border border-slate-800 bg-slate-900/70 p-0.5">
       <Tab active={mode === 'feed'} onClick={() => onChange('feed')}>
         All records
         <Counter n={feedCount} />

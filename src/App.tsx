@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useInvestigation } from '@/hooks/useInvestigation';
 import { applyFilters, emptyFilters, type Filters } from '@/lib/filter';
 import { Header } from '@/components/Header';
@@ -43,6 +43,22 @@ export default function App() {
   const [selection, setSelection] = useState<Selection>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('feed');
   const [mobileTab, setMobileTab] = useState<MobileTab>('records');
+  const [panelOpen, setPanelOpen] = useState<boolean>(true);
+
+  // Auto-collapse the insights panel whenever a data filter is applied from
+  // anywhere below it (LeftRail source chips, location select, person click,
+  // Feed chip removal, map filter sync, etc). Query typing does not collapse.
+  const filterSignature = useMemo(() => {
+    const sources = [...filters.sources].sort().join('|');
+    return `${sources}::${filters.personKey ?? ''}::${filters.location ?? ''}`;
+  }, [filters.sources, filters.personKey, filters.location]);
+  // Compare against the initial signature (not a "first render" flag) so that
+  // React StrictMode's double-invoked effect doesn't collapse on mount.
+  const initialFilterSignature = useRef(filterSignature);
+  useEffect(() => {
+    if (filterSignature === initialFilterSignature.current) return;
+    setPanelOpen(false);
+  }, [filterSignature]);
 
   const filtered = useMemo(() => applyFilters(records, filters), [records, filters]);
 
@@ -125,17 +141,51 @@ export default function App() {
         isRetrying={isRetrying}
         onRetry={retryFailed}
       />
-      <HeroCard
-        subject={subject}
-        insights={insights}
-        onSelectPerson={onSelectPerson}
-        onSelectLocation={onSelectLocation}
-      />
-      <SummaryStrip
-        insights={insights}
-        onSelectPerson={onSelectPerson}
-        onApplyFilters={onApplyFilters}
-      />
+      <section className="relative mb-3 md:mb-4 border-b border-slate-800 bg-gradient-to-br from-rose-950/25 via-slate-900/60 to-slate-950">
+        <HeroCard
+          subject={subject}
+          insights={insights}
+          onSelectPerson={onSelectPerson}
+          onSelectLocation={onSelectLocation}
+          compact={!panelOpen}
+        />
+        <SummaryStrip
+          insights={insights}
+          onSelectPerson={onSelectPerson}
+          onApplyFilters={onApplyFilters}
+          open={panelOpen}
+        />
+        <button
+          type="button"
+          onClick={() => setPanelOpen((o) => !o)}
+          aria-expanded={panelOpen}
+          aria-controls="insights-grid"
+          aria-label={panelOpen ? 'Collapse subject panel' : 'Expand subject panel'}
+          className="
+            absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0 z-10
+            inline-flex items-center justify-center w-7 h-7 rounded-full
+            bg-slate-950 border border-slate-800 text-slate-400
+            hover:text-amber-300 hover:border-slate-600
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60
+            transition-colors
+          "
+        >
+          <svg
+            aria-hidden
+            viewBox="0 0 12 12"
+            className={`w-3 h-3 transition-transform ${panelOpen ? '' : 'rotate-180'}`}
+            fill="none"
+          >
+            <path
+              d="M3 7.5 6 4.5 9 7.5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </section>
       <MobileTabs
         tab={mobileTab}
         onChange={setMobileTab}

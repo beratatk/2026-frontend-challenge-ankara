@@ -10,6 +10,7 @@ type Props = {
   insights: InsightBundle;
   onSelectPerson: (key: string) => void;
   onSelectLocation: (loc: string) => void;
+  compact?: boolean;
 };
 
 export function HeroCard({
@@ -17,6 +18,7 @@ export function HeroCard({
   insights,
   onSelectPerson,
   onSelectLocation,
+  compact = false,
 }: Props) {
   if (!subject) return null;
 
@@ -27,7 +29,7 @@ export function HeroCard({
   const open = () => onSelectPerson(SUBJECT_KEY);
 
   return (
-    <section className="border-b border-slate-800 bg-gradient-to-br from-rose-950/25 via-slate-900/60 to-slate-950 px-4 sm:px-6 py-4">
+    <section className="px-4 sm:px-6 py-4">
       <div className="flex flex-col gap-4">
         {/* Identity row */}
         <div className="flex items-center gap-3 sm:gap-4">
@@ -79,7 +81,8 @@ export function HeroCard({
           </button>
         </div>
 
-        {/* Facts grid */}
+        {/* Facts grid — hidden when compact */}
+        {!compact && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 pt-3 border-t border-slate-800/60">
           <FactBlock label="Last location">
             {lastKnownLocation ? (
@@ -139,6 +142,7 @@ export function HeroCard({
             </p>
           </FactBlock>
         </div>
+        )}
       </div>
     </section>
   );
@@ -174,7 +178,7 @@ function MissingBadge() {
   );
 }
 
-function FactBlock({
+export function FactBlock({
   label,
   children,
 }: {

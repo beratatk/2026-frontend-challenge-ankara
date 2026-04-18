@@ -109,7 +109,7 @@ export function LeftRail({
         <p className="text-[10px] uppercase tracking-[0.12em] text-slate-400 mb-1.5">
           Sources
         </p>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="grid grid-cols-5 gap-1">
           {SOURCES.map((s) => {
             const active = filters.sources.has(s);
             return (
@@ -117,7 +117,7 @@ export function LeftRail({
                 key={s}
                 type="button"
                 onClick={() => setFilters(toggleSource(filters, s))}
-                className={`rounded px-1.5 py-0.5 text-[10px] ring-1 ring-inset uppercase tracking-wide ${
+                className={`rounded px-1 py-0.5 text-[10px] ring-1 ring-inset uppercase tracking-wide text-center truncate ${
                   active
                     ? 'bg-slate-200 text-slate-900 ring-slate-200'
                     : 'bg-slate-900/60 text-slate-300 ring-slate-700 hover:bg-slate-800'
