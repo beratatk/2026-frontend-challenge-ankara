@@ -436,3 +436,11 @@ export function subjectTimeline(
     .filter((e) => e.participantKeys.includes(subjectKey))
     .sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
 }
+
+export function findEventForRecord(
+  events: InvestigationEvent[],
+  recordId: string,
+): InvestigationEvent | null {
+  for (const e of events) if (e.recordIds.includes(recordId)) return e;
+  return null;
+}
