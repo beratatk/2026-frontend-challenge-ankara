@@ -1,5 +1,11 @@
 # Missing Podo — Ankara Case
 
+## User Information
+
+- **Name:** Berat Atak
+
+---
+
 An investigation workspace that links checkins, messages, sightings, personal notes, and anonymous tips into a single, searchable case file. Built in 3 hours for the Jotform 2026 Frontend Challenge.
 
 ## Product summary
