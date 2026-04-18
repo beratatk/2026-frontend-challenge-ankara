@@ -66,11 +66,16 @@ export default function App() {
   // an unchanged scrollTop do not immediately re-collapse. scroll events do
   // not bubble — capture-phase listener catches descendants.
   const mainRef = useRef<HTMLElement | null>(null);
+  // When the user re-expands the panel we briefly ignore scroll events: the
+  // layout shift from growing the hero can reposition inner scrollers and
+  // fire a synthetic scrollTop bump that would otherwise slam it shut again.
+  const suppressScrollCollapseUntil = useRef(0);
   useEffect(() => {
     const main = mainRef.current;
     if (!main) return;
     const lastTop = new WeakMap<HTMLElement, number>();
     const onScroll = (e: Event) => {
+      if (performance.now() < suppressScrollCollapseUntil.current) return;
       const t = e.target;
       if (!(t instanceof HTMLElement)) return;
       const prev = lastTop.get(t) ?? 0;
@@ -81,7 +86,7 @@ export default function App() {
     main.addEventListener('scroll', onScroll, { capture: true, passive: true });
     return () =>
       main.removeEventListener('scroll', onScroll, { capture: true } as EventListenerOptions);
-  }, []);
+  }, [isInitialLoading, allFailed]);
 
   const filtered = useMemo(() => applyFilters(records, filters), [records, filters]);
 
@@ -186,7 +191,12 @@ export default function App() {
         />
         <button
           type="button"
-          onClick={() => setPanelOpen((o) => !o)}
+          onClick={() =>
+            setPanelOpen((o) => {
+              if (!o) suppressScrollCollapseUntil.current = performance.now() + 600;
+              return !o;
+            })
+          }
           aria-expanded={panelOpen}
           aria-controls="insights-grid"
           aria-label={panelOpen ? 'Collapse subject panel' : 'Expand subject panel'}

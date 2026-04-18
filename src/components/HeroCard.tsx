@@ -163,7 +163,7 @@ function SubjectAvatar({ name }: { name: string }) {
       <img
         src={podoAvatar}
         alt={name}
-        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover bg-slate-800 ring-2 ring-amber-400 shadow-[0_0_0_4px_rgb(2_6_23)]"
+        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover bg-slate-800 ring-2 ring-amber-400 shadow-[0_0_0_4px_rgb(2_6_23),0_0_24px_rgba(245,158,11,0.35)]"
       />
       <span
         aria-hidden

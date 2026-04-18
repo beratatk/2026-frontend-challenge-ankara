@@ -24,12 +24,18 @@ export function RecordCard({
   return (
     <article
       onClick={() => onSelect(r.id)}
-      className={`cursor-pointer rounded-lg border p-3 transition-colors ${
+      className={`group relative cursor-pointer rounded-lg border p-3 transition-all duration-200 ease-out ${
         selected
-          ? 'border-amber-400/60 bg-amber-400/5'
-          : 'border-slate-800 bg-slate-900/40 hover:bg-slate-900/80 hover:border-slate-700'
+          ? 'border-amber-400/50 bg-amber-400/[0.06] shadow-[0_8px_24px_-12px_rgba(245,158,11,0.25)]'
+          : 'border-slate-800 bg-slate-900/40 hover:bg-slate-900/80 hover:border-slate-700/80 hover:-translate-y-[1px] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.6)]'
       }`}
     >
+      {selected && (
+        <span
+          aria-hidden
+          className="absolute left-0 top-2 bottom-2 w-[2px] rounded-full bg-amber-400"
+        />
+      )}
       <div className="flex items-center gap-2 flex-wrap text-xs">
         <SourceBadge source={r.source} />
         <span className="text-slate-400 font-mono">{fmtDateTime(r.timestamp)}</span>

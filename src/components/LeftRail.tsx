@@ -174,12 +174,18 @@ export function LeftRail({
                 <button
                   type="button"
                   onClick={() => onSelectPerson(p.key)}
-                  className={`w-full min-w-0 text-left rounded-md px-2 py-1.5 border transition-colors ${
+                  className={`group relative w-full min-w-0 text-left rounded-md px-2 py-1.5 border transition-all duration-150 ease-out active:scale-[0.99] ${
                     isSelected
-                      ? 'border-amber-400/60 bg-amber-400/10'
+                      ? 'border-amber-400/50 bg-amber-400/10 shadow-[0_4px_16px_-8px_rgba(245,158,11,0.3)]'
                       : 'border-transparent hover:bg-slate-900/70 hover:border-slate-800'
                   }`}
                 >
+                  {isSelected && (
+                    <span
+                      aria-hidden
+                      className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full bg-amber-400"
+                    />
+                  )}
                   <div className="flex items-center justify-between gap-2 min-w-0">
                     <span className="flex items-center gap-2 min-w-0">
                       {isSubject ? (
