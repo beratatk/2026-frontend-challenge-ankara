@@ -26,9 +26,11 @@ type Props = {
   profiles: PersonInvestigationProfile[];
   subject: Person | null;
   podoTimeline: InvestigationEvent[];
+  activeLocation: string | null;
   onClear: () => void;
   onSelectPerson: (key: string) => void;
   onSelectRecord: (id: string) => void;
+  onSelectLocation: (loc: string) => void;
 };
 
 export function DetailPane(props: Props) {
@@ -46,6 +48,7 @@ function DefaultView({
   podoTimeline,
   onSelectPerson,
   onSelectRecord,
+  onSelectLocation,
 }: Props) {
   const recent = podoTimeline.slice(-4).reverse();
   return (
@@ -77,6 +80,7 @@ function DefaultView({
                   subjectKey={SUBJECT_KEY}
                   onSelectPerson={onSelectPerson}
                   onSelectRecord={onSelectRecord}
+                  onSelectLocation={onSelectLocation}
                 />
               ))}
             </ol>
@@ -118,6 +122,7 @@ function PersonView({
   onClear,
   onSelectPerson,
   onSelectRecord,
+  onSelectLocation,
 }: Props & { personKey: string }) {
   const person = people.get(personKey);
   const profile = useMemo(
@@ -228,6 +233,7 @@ function PersonView({
                 subjectKey={SUBJECT_KEY}
                 onSelectPerson={onSelectPerson}
                 onSelectRecord={onSelectRecord}
+                onSelectLocation={onSelectLocation}
               />
             ))}
           </ol>
@@ -293,6 +299,7 @@ function RecordView({
   onClear,
   onSelectPerson,
   onSelectRecord,
+  onSelectLocation,
 }: Props & { recordId: string }) {
   const record = useMemo(() => records.find((r) => r.id === recordId) ?? null, [records, recordId]);
   const event = useMemo(
@@ -325,7 +332,13 @@ function RecordView({
       {record.location && (
         <section>
           <SectionTitle>Location</SectionTitle>
-          <p className="text-sm mt-1">{record.location}</p>
+          <button
+            type="button"
+            onClick={() => onSelectLocation(record.location!)}
+            className="text-sm mt-1 text-left hover:text-amber-300 underline-offset-2 hover:underline"
+          >
+            {record.location}
+          </button>
           {record.coordinates && (
             <p className="text-[11px] text-slate-500 font-mono">
               {record.coordinates.lat.toFixed(5)}, {record.coordinates.lng.toFixed(5)}
@@ -417,11 +430,13 @@ function EventRow({
   subjectKey,
   onSelectPerson,
   onSelectRecord,
+  onSelectLocation,
 }: {
   event: InvestigationEvent;
   subjectKey: string;
   onSelectPerson: (key: string) => void;
   onSelectRecord: (id: string) => void;
+  onSelectLocation: (loc: string) => void;
 }) {
   const others = event.participantKeys
     .map((k, i) => ({ key: k, name: event.participantsDisplay[i] }))
@@ -429,7 +444,13 @@ function EventRow({
   return (
     <li className="rounded-md border border-slate-800 bg-slate-900/40 p-2.5">
       <p className="text-xs text-slate-400 font-mono">{fmtRange(event.startAt, event.endAt)}</p>
-      <p className="text-sm font-medium">{event.location}</p>
+      <button
+        type="button"
+        onClick={() => onSelectLocation(event.location)}
+        className="text-sm font-medium text-left hover:text-amber-300"
+      >
+        {event.location}
+      </button>
       {others.length > 0 && (
         <div className="mt-1 flex flex-wrap gap-1">
           {others.map((p) => (

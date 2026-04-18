@@ -9,6 +9,7 @@ type Props = {
   insights: InsightBundle;
   onSelectPerson: (key: string) => void;
   onSelectRecord: (id: string) => void;
+  onSelectLocation: (loc: string) => void;
   onApplyFilters: (partial: Partial<Filters>) => void;
 };
 
@@ -16,6 +17,7 @@ export function SummaryStrip({
   insights,
   onSelectPerson,
   onSelectRecord,
+  onSelectLocation,
   onApplyFilters,
 }: Props) {
   const {
@@ -33,7 +35,13 @@ export function SummaryStrip({
       <InsightCard title="Last known location">
         {lastKnownLocation ? (
           <>
-            <p className="text-base font-semibold truncate">{lastKnownLocation.name}</p>
+            <button
+              type="button"
+              onClick={() => onSelectLocation(lastKnownLocation.name)}
+              className="text-base font-semibold truncate text-left hover:text-amber-300"
+            >
+              {lastKnownLocation.name}
+            </button>
             <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
               <span>{fmtDateTime(lastKnownLocation.at)}</span>
               <span>·</span>

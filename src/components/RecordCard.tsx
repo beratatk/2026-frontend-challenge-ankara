@@ -6,16 +6,20 @@ type Props = {
   record: InvestigationRecord;
   selected?: boolean;
   activePersonKey?: string | null;
+  activeLocation?: string | null;
   onSelect: (id: string) => void;
   onSelectPerson: (key: string) => void;
+  onSelectLocation: (loc: string) => void;
 };
 
 export function RecordCard({
   record: r,
   selected,
   activePersonKey,
+  activeLocation,
   onSelect,
   onSelectPerson,
+  onSelectLocation,
 }: Props) {
   return (
     <article
@@ -29,7 +33,22 @@ export function RecordCard({
       <div className="flex items-center gap-2 flex-wrap text-xs">
         <SourceBadge source={r.source} />
         <span className="text-slate-400 font-mono">{fmtDateTime(r.timestamp)}</span>
-        {r.location && <span className="text-slate-400">· {r.location}</span>}
+        {r.location && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectLocation(r.location!);
+            }}
+            className={`underline-offset-2 hover:underline hover:text-amber-300 ${
+              activeLocation?.toLowerCase() === r.location.toLowerCase()
+                ? 'text-amber-300'
+                : 'text-slate-400'
+            }`}
+          >
+            · {r.location}
+          </button>
+        )}
         {r.extra.urgency && <UrgencyBadge value={r.extra.urgency} />}
         {r.extra.confidence && <ConfidenceBadge value={r.extra.confidence} />}
       </div>

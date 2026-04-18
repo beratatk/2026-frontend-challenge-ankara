@@ -54,3 +54,16 @@ export function toggleSource(f: Filters, s: RecordSource): Filters {
   else next.add(s);
   return { ...f, sources: next };
 }
+
+// Unique locations across records, sorted by frequency then alphabetically.
+export function uniqueLocations(
+  records: InvestigationRecord[],
+): { name: string; count: number }[] {
+  const m = new Map<string, number>();
+  for (const r of records) {
+    if (r.location) m.set(r.location, (m.get(r.location) ?? 0) + 1);
+  }
+  return [...m.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'tr'));
+}

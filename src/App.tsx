@@ -39,6 +39,9 @@ export default function App() {
   const onClearSelection = () => setSelection(null);
   const onApplyFilters = (partial: Partial<Filters>) =>
     setFilters((prev) => ({ ...prev, ...partial }));
+  // Toggle location filter: clicking the same location clears it.
+  const onSelectLocation = (loc: string) =>
+    setFilters((f) => ({ ...f, location: f.location === loc ? null : loc }));
 
   const selectedRecordId = selection?.kind === 'record' ? selection.id : null;
   const selectedPersonKey = selection?.kind === 'person' ? selection.key : null;
@@ -81,10 +84,12 @@ export default function App() {
         insights={insights}
         onSelectPerson={onSelectPerson}
         onSelectRecord={onSelectRecord}
+        onSelectLocation={onSelectLocation}
         onApplyFilters={onApplyFilters}
       />
       <main className="flex-1 min-h-0 grid grid-cols-[260px_minmax(0,1fr)_440px] gap-4 px-6 py-4">
         <LeftRail
+          records={records}
           people={people}
           profiles={profiles}
           filters={filters}
@@ -101,6 +106,7 @@ export default function App() {
           activePersonKey={activePersonKey}
           onSelectRecord={onSelectRecord}
           onSelectPerson={onSelectPerson}
+          onSelectLocation={onSelectLocation}
         />
         <DetailPane
           selection={selection}
@@ -110,9 +116,11 @@ export default function App() {
           profiles={profiles}
           subject={subject}
           podoTimeline={podoTimeline}
+          activeLocation={filters.location}
           onClear={onClearSelection}
           onSelectPerson={onSelectPerson}
           onSelectRecord={onSelectRecord}
+          onSelectLocation={onSelectLocation}
         />
       </main>
     </div>

@@ -15,6 +15,7 @@ type Props = {
   activePersonKey: string | null;
   onSelectRecord: (id: string) => void;
   onSelectPerson: (key: string) => void;
+  onSelectLocation: (loc: string) => void;
 };
 
 export function Feed({
@@ -26,6 +27,7 @@ export function Feed({
   activePersonKey,
   onSelectRecord,
   onSelectPerson,
+  onSelectLocation,
 }: Props) {
   // Newest first for investigation flow
   const sorted = useMemo(
@@ -97,8 +99,10 @@ export function Feed({
               record={r}
               selected={selectedRecordId === r.id}
               activePersonKey={activePersonKey}
+              activeLocation={filters.location}
               onSelect={onSelectRecord}
               onSelectPerson={onSelectPerson}
+              onSelectLocation={onSelectLocation}
             />
           ))
         )}
