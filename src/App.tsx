@@ -5,6 +5,8 @@ import { Header } from '@/components/Header';
 import { SummaryStrip } from '@/components/SummaryStrip';
 import { LeftRail } from '@/components/LeftRail';
 import { Feed } from '@/components/Feed';
+import { Timeline } from '@/components/Timeline';
+import { ViewToggle, type ViewMode } from '@/components/ViewToggle';
 import { DetailPane } from '@/components/DetailPane';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { ErrorScreen } from '@/components/ErrorScreen';
@@ -35,8 +37,16 @@ export default function App() {
 
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [selection, setSelection] = useState<Selection>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('feed');
 
   const filtered = useMemo(() => applyFilters(records, filters), [records, filters]);
+
+  // Timeline view always centers on the subject — other filters still apply.
+  const timelineRecords = useMemo(() => {
+    if (!subject) return [];
+    const base = records.filter((r) => r.personRefs.includes(subject.key));
+    return applyFilters(base, { ...filters, personKey: null });
+  }, [records, subject, filters]);
 
   const onSelectPerson = (key: string) => {
     setSelection({ kind: 'person', key });
@@ -97,17 +107,40 @@ export default function App() {
           onSelectPerson={onSelectPerson}
           selectedPersonKey={activePersonKey}
         />
-        <Feed
-          records={filtered}
-          filters={filters}
-          setFilters={setFilters}
-          people={people}
-          selectedRecordId={selectedRecordId}
-          activePersonKey={activePersonKey}
-          onSelectRecord={onSelectRecord}
-          onSelectPerson={onSelectPerson}
-          onSelectLocation={onSelectLocation}
-        />
+        <div className="flex flex-col gap-3 min-h-0">
+          <ViewToggle
+            mode={viewMode}
+            onChange={setViewMode}
+            subjectName={subject?.displayName ?? null}
+            feedCount={filtered.length}
+            timelineCount={timelineRecords.length}
+          />
+          {viewMode === 'feed' ? (
+            <Feed
+              records={filtered}
+              filters={filters}
+              setFilters={setFilters}
+              people={people}
+              selectedRecordId={selectedRecordId}
+              activePersonKey={activePersonKey}
+              onSelectRecord={onSelectRecord}
+              onSelectPerson={onSelectPerson}
+              onSelectLocation={onSelectLocation}
+            />
+          ) : (
+            <Timeline
+              records={timelineRecords}
+              events={events}
+              subject={subject}
+              selectedRecordId={selectedRecordId}
+              activePersonKey={activePersonKey}
+              activeLocation={filters.location}
+              onSelectRecord={onSelectRecord}
+              onSelectPerson={onSelectPerson}
+              onSelectLocation={onSelectLocation}
+            />
+          )}
+        </div>
         <DetailPane
           selection={selection}
           records={records}
