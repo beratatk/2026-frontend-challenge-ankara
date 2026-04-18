@@ -66,6 +66,7 @@ export function RecordCard({
               <PersonChip
                 key={key}
                 name={name}
+                seed={key}
                 active={activePersonKey === key}
                 onClick={() => onSelectPerson(key)}
               />

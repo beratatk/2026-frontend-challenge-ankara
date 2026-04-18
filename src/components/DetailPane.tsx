@@ -12,6 +12,7 @@ import {
   UrgencyBadge,
 } from '@/components/atoms';
 import { fmtDateTime, fmtRange, recordTitle, roleLabel } from '@/lib/format';
+import podoAvatar from '@/assets/podo.png';
 
 type Selection =
   | { kind: 'person'; key: string }
@@ -53,7 +54,11 @@ function DefaultView({
   const recent = podoTimeline.slice(-4).reverse();
   return (
     <div className="h-full min-h-0 overflow-y-auto pr-1 space-y-4">
-      <PaneHeader kind="Case subject" title={subject?.displayName ?? 'Podo'} />
+      <PaneHeader
+        kind="Case subject"
+        title={subject?.displayName ?? 'Podo'}
+        avatarSrc={podoAvatar}
+      />
       {subject ? (
         <>
           <Card className="p-4 space-y-1">
@@ -93,6 +98,7 @@ function DefaultView({
                 <PersonChip
                   key={co.key}
                   name={`${co.displayName} · ${co.count}`}
+                  seed={co.key}
                   onClick={() => onSelectPerson(co.key)}
                 />
               ))}
@@ -173,6 +179,7 @@ function PersonView({
         kind={isSubject ? 'Case subject' : 'Person'}
         title={person.displayName}
         onClose={onClear}
+        avatarSrc={isSubject ? podoAvatar : undefined}
       />
 
       <Card className="p-4 space-y-1">
@@ -248,6 +255,7 @@ function PersonView({
               <PersonChip
                 key={co.key}
                 name={`${co.displayName} · ${co.count}`}
+                seed={co.key}
                 onClick={() => onSelectPerson(co.key)}
               />
             ))}
@@ -266,6 +274,7 @@ function PersonView({
               <PersonChip
                 key={a.key}
                 name={`${a.displayName} · edit dist ${a.distance}`}
+                seed={a.key}
                 onClick={() => onSelectPerson(a.key)}
               />
             ))}
@@ -358,6 +367,7 @@ function RecordView({
                 <PersonChip
                   key={key}
                   name={name}
+                  seed={key}
                   role={roleLabel(role)}
                   onClick={() => onSelectPerson(key)}
                 />
@@ -400,16 +410,27 @@ function PaneHeader({
   kind,
   title,
   onClose,
+  avatarSrc,
 }: {
   kind: string;
   title: string;
   onClose?: () => void;
+  avatarSrc?: string;
 }) {
   return (
     <div className="flex items-start justify-between gap-2">
-      <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-[0.12em] text-slate-400">{kind}</p>
-        <h2 className="text-xl font-semibold truncate">{title}</h2>
+      <div className="flex items-center gap-3 min-w-0">
+        {avatarSrc && (
+          <img
+            src={avatarSrc}
+            alt={title}
+            className="w-12 h-12 rounded-full object-cover border border-slate-700 flex-shrink-0"
+          />
+        )}
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-slate-400">{kind}</p>
+          <h2 className="text-xl font-semibold truncate">{title}</h2>
+        </div>
       </div>
       {onClose && (
         <button
@@ -454,7 +475,7 @@ function EventRow({
       {others.length > 0 && (
         <div className="mt-1 flex flex-wrap gap-1">
           {others.map((p) => (
-            <PersonChip key={p.key} name={p.name} onClick={() => onSelectPerson(p.key)} />
+            <PersonChip key={p.key} name={p.name} seed={p.key} onClick={() => onSelectPerson(p.key)} />
           ))}
         </div>
       )}

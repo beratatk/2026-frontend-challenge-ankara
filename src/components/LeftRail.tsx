@@ -4,7 +4,7 @@ import { SUBJECT_KEY } from '@/lib/linking';
 import type { InvestigationRecord, RecordSource } from '@/types/records';
 import type { Filters } from '@/lib/filter';
 import { toggleSource, uniqueLocations } from '@/lib/filter';
-import { SOURCE_LABEL, SignalPill, SourceBadge } from '@/components/atoms';
+import { Avatar, SOURCE_LABEL, SignalPill, SourceBadge } from '@/components/atoms';
 
 const SOURCES: RecordSource[] = ['checkin', 'message', 'sighting', 'note', 'tip'];
 
@@ -182,6 +182,15 @@ export function LeftRail({
                 >
                   <div className="flex items-center justify-between gap-2 min-w-0">
                     <span className="flex items-center gap-2 min-w-0">
+                      {isSubject ? (
+                        <span className="relative shrink-0">
+                          <span className="w-5 h-5 rounded-full bg-slate-800 ring-1 ring-amber-400 inline-flex items-center justify-center text-[9px] font-bold text-amber-300 uppercase">
+                            {(p.displayName[0] ?? 'P').toUpperCase()}
+                          </span>
+                        </span>
+                      ) : (
+                        <Avatar name={p.displayName} seed={p.key} size="sm" />
+                      )}
                       <span
                         className={`font-medium truncate ${isSubject ? 'text-amber-300' : ''}`}
                       >
@@ -195,7 +204,7 @@ export function LeftRail({
                     </span>
                     {score > 0 && <SignalPill weight={score} />}
                   </div>
-                  <div className="mt-0.5 flex items-center flex-wrap gap-x-1 gap-y-0.5 text-[10px] text-slate-500 min-w-0">
+                  <div className="mt-0.5 pl-7 flex items-center flex-wrap gap-x-1 gap-y-0.5 text-[10px] text-slate-500 min-w-0">
                     <span className="tabular-nums">{p.recordCount} records</span>
                     {Object.entries(p.recordsBySource)
                       .filter(([, n]) => n > 0)

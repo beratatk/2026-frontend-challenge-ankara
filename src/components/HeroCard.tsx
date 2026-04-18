@@ -1,8 +1,9 @@
 import type { Person } from '@/lib/linking';
 import type { InsightBundle } from '@/lib/insights';
 import { SUBJECT_KEY } from '@/lib/linking';
-import { SourceBadge } from '@/components/atoms';
+import { SourceBadge, avatarColor, avatarInitials } from '@/components/atoms';
 import { fmtDateTime } from '@/lib/format';
+import podoAvatar from '@/assets/podo.png';
 
 type Props = {
   subject: Person | null;
@@ -24,7 +25,6 @@ export function HeroCard({
     (n) => n > 0,
   ).length;
   const open = () => onSelectPerson(SUBJECT_KEY);
-  const initial = (subject.displayName[0] ?? 'P').toUpperCase();
 
   return (
     <section className="border-b border-slate-800 bg-gradient-to-br from-rose-950/25 via-slate-900/60 to-slate-950 px-4 sm:px-6 py-4">
@@ -37,7 +37,7 @@ export function HeroCard({
             aria-label={`Open ${subject.displayName} full profile`}
             className="shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-amber-400"
           >
-            <SubjectAvatar initial={initial} />
+            <SubjectAvatar name={subject.displayName} />
           </button>
 
           <div className="min-w-0 flex-1">
@@ -146,12 +146,14 @@ export function HeroCard({
 
 // ------------------------------ subcomponents ------------------------------
 
-function SubjectAvatar({ initial }: { initial: string }) {
+function SubjectAvatar({ name }: { name: string }) {
   return (
     <div className="relative">
-      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-800 ring-2 ring-amber-400 flex items-center justify-center text-lg sm:text-xl font-bold text-amber-300 shadow-[0_0_0_4px_rgb(2_6_23)]">
-        {initial}
-      </div>
+      <img
+        src={podoAvatar}
+        alt={name}
+        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover bg-slate-800 ring-2 ring-amber-400 shadow-[0_0_0_4px_rgb(2_6_23)]"
+      />
       <span
         aria-hidden
         className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-amber-400 ring-2 ring-slate-950 animate-pulse"
@@ -204,9 +206,9 @@ function AvatarStack({
           type="button"
           onClick={() => onSelect(p.key)}
           title={p.displayName}
-          className="w-7 h-7 rounded-full bg-slate-700 ring-2 ring-slate-950 flex items-center justify-center text-[10px] font-semibold text-slate-100 hover:bg-slate-600 hover:ring-amber-400 hover:z-10 relative transition-colors"
+          className={`${avatarColor(p.key)} w-7 h-7 rounded-full ring-2 ring-slate-950 inline-flex items-center justify-center text-[10px] font-semibold uppercase hover:ring-amber-400 hover:z-10 relative transition-colors`}
         >
-          {(p.displayName[0] ?? '?').toUpperCase()}
+          {avatarInitials(p.displayName)}
         </button>
       ))}
     </div>
