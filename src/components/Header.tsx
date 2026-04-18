@@ -16,10 +16,10 @@ export function Header({ recordCount, peopleCount, eventCount, isFetching }: Pro
           Missing Podo — Ankara Case
         </h1>
       </div>
-      <div className="flex items-center gap-3 sm:gap-5 text-xs text-slate-400 flex-shrink-0">
-        <Stat label="records" value={recordCount} />
-        <Stat label="people" value={peopleCount} />
-        <Stat label="events" value={eventCount} className="hidden sm:flex" />
+      <div className="flex items-center gap-2 sm:gap-5 text-xs text-slate-400 flex-shrink-0">
+        <Stat shortLabel="rec" label="records" value={recordCount} />
+        <Stat shortLabel="ppl" label="people" value={peopleCount} />
+        <Stat shortLabel="evt" label="events" value={eventCount} className="hidden sm:flex" />
         {isFetching && (
           <span className="inline-flex items-center gap-1 text-amber-300">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
@@ -33,17 +33,20 @@ export function Header({ recordCount, peopleCount, eventCount, isFetching }: Pro
 
 function Stat({
   label,
+  shortLabel,
   value,
   className = '',
 }: {
   label: string;
+  shortLabel: string;
   value: number;
   className?: string;
 }) {
   return (
     <div className={`flex items-baseline gap-1 ${className}`}>
       <span className="text-slate-100 font-semibold text-sm tabular-nums">{value}</span>
-      <span>{label}</span>
+      <span className="hidden sm:inline">{label}</span>
+      <span className="sm:hidden">{shortLabel}</span>
     </div>
   );
 }

@@ -174,13 +174,13 @@ export function LeftRail({
                 <button
                   type="button"
                   onClick={() => onSelectPerson(p.key)}
-                  className={`w-full text-left rounded-md px-2 py-1.5 border transition-colors ${
+                  className={`w-full min-w-0 text-left rounded-md px-2 py-1.5 border transition-colors ${
                     isSelected
                       ? 'border-amber-400/60 bg-amber-400/10'
                       : 'border-transparent hover:bg-slate-900/70 hover:border-slate-800'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2 min-w-0">
                     <span className="flex items-center gap-2 min-w-0">
                       <span
                         className={`font-medium truncate ${isSubject ? 'text-amber-300' : ''}`}
@@ -188,14 +188,14 @@ export function LeftRail({
                         {p.displayName}
                       </span>
                       {isSubject && (
-                        <span className="text-[9px] uppercase tracking-wider text-amber-300/80">
+                        <span className="text-[9px] uppercase tracking-wider text-amber-300/80 flex-shrink-0">
                           subject
                         </span>
                       )}
                     </span>
                     {score > 0 && <SignalPill weight={score} />}
                   </div>
-                  <div className="mt-0.5 flex items-center gap-1 text-[10px] text-slate-500">
+                  <div className="mt-0.5 flex items-center flex-wrap gap-x-1 gap-y-0.5 text-[10px] text-slate-500 min-w-0">
                     <span className="tabular-nums">{p.recordCount} records</span>
                     {Object.entries(p.recordsBySource)
                       .filter(([, n]) => n > 0)

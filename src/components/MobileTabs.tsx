@@ -60,7 +60,7 @@ function TabButton({
       role="tab"
       aria-selected={active}
       onClick={onClick}
-      className={`px-3 py-2.5 text-xs inline-flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
+      className={`min-w-0 px-2 py-2.5 text-xs inline-flex items-center justify-center gap-1.5 border-b-2 transition-colors truncate ${
         active
           ? 'text-amber-300 border-amber-400'
           : 'text-slate-400 border-transparent hover:text-slate-200'

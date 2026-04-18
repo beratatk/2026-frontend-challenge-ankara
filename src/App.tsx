@@ -140,14 +140,14 @@ export default function App() {
       />
       <main
         className="
-          flex-1 min-h-0 flex flex-col
+          flex-1 min-h-0 min-w-0 flex flex-col
           md:grid md:grid-cols-[240px_minmax(0,1fr)] md:gap-4 md:px-6 md:py-4
           lg:grid-cols-[260px_minmax(0,1fr)_440px]
         "
       >
         {/* LeftRail: sm tab, md+ always visible */}
         <div
-          className={`min-h-0 px-4 pb-4 md:p-0 flex-col ${
+          className={`min-h-0 min-w-0 px-4 pb-4 md:p-0 flex-col ${
             mobileTab === 'people' ? 'flex flex-1' : 'hidden md:flex'
           }`}
         >
@@ -164,7 +164,7 @@ export default function App() {
 
         {/* Center column: sm tab, md+ always visible */}
         <div
-          className={`min-h-0 px-4 pb-4 md:p-0 gap-3 flex-col ${
+          className={`min-h-0 min-w-0 px-4 pb-4 md:p-0 gap-3 flex-col ${
             mobileTab === 'records' ? 'flex flex-1' : 'hidden md:flex'
           }`}
         >
@@ -213,13 +213,13 @@ export default function App() {
         </div>
 
         {/* DetailPane: inline on lg+, hidden below */}
-        <div className="hidden lg:flex flex-col min-h-0">
+        <div className="hidden lg:flex flex-col min-h-0 min-w-0">
           <DetailPane {...detailPaneProps} />
         </div>
 
         {/* DetailPane: sm tab version (md:hidden — md uses the drawer) */}
         <div
-          className={`min-h-0 px-4 pb-4 md:hidden flex-col ${
+          className={`min-h-0 min-w-0 px-4 pb-4 md:hidden flex-col ${
             mobileTab === 'detail' ? 'flex flex-1' : 'hidden'
           }`}
         >
