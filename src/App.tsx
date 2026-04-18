@@ -6,6 +6,7 @@ import { SummaryStrip } from '@/components/SummaryStrip';
 import { LeftRail } from '@/components/LeftRail';
 import { Feed } from '@/components/Feed';
 import { Timeline } from '@/components/Timeline';
+import { MapView } from '@/components/MapView';
 import { ViewToggle, type ViewMode } from '@/components/ViewToggle';
 import { DetailPane } from '@/components/DetailPane';
 import { LoadingScreen } from '@/components/LoadingScreen';
@@ -47,6 +48,17 @@ export default function App() {
     const base = records.filter((r) => r.personRefs.includes(subject.key));
     return applyFilters(base, { ...filters, personKey: null });
   }, [records, subject, filters]);
+
+  // Map uses the same filtered set as Feed, restricted to geolocated records.
+  const mapRecords = useMemo(
+    () => filtered.filter((r) => r.coordinates),
+    [filtered],
+  );
+  const mapPinCount = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of mapRecords) if (r.location) s.add(r.location.toLowerCase());
+    return s.size;
+  }, [mapRecords]);
 
   const onSelectPerson = (key: string) => {
     setSelection({ kind: 'person', key });
@@ -114,8 +126,9 @@ export default function App() {
             subjectName={subject?.displayName ?? null}
             feedCount={filtered.length}
             timelineCount={timelineRecords.length}
+            mapCount={mapPinCount}
           />
-          {viewMode === 'feed' ? (
+          {viewMode === 'feed' && (
             <Feed
               records={filtered}
               filters={filters}
@@ -127,7 +140,8 @@ export default function App() {
               onSelectPerson={onSelectPerson}
               onSelectLocation={onSelectLocation}
             />
-          ) : (
+          )}
+          {viewMode === 'timeline' && (
             <Timeline
               records={timelineRecords}
               events={events}
@@ -138,6 +152,14 @@ export default function App() {
               onSelectRecord={onSelectRecord}
               onSelectPerson={onSelectPerson}
               onSelectLocation={onSelectLocation}
+            />
+          )}
+          {viewMode === 'map' && (
+            <MapView
+              records={mapRecords}
+              subject={subject}
+              selectedRecordId={selectedRecordId}
+              onSelectRecord={onSelectRecord}
             />
           )}
         </div>

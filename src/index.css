@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Leaflet popup — minimal dark-theme override */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: rgb(15 23 42); /* slate-900 */
+  color: rgb(226 232 240); /* slate-200 */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+.leaflet-popup-content-wrapper {
+  border: 1px solid rgb(30 41 59); /* slate-800 */
+  border-radius: 0.5rem;
+}
+.leaflet-popup-content {
+  margin: 10px 12px;
+}
+.leaflet-container a.leaflet-popup-close-button {
+  color: rgb(148 163 184); /* slate-400 */
+}
+.leaflet-container {
+  background: rgb(2 6 23); /* slate-950 */
+  font-family: inherit;
+}

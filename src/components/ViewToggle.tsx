@@ -1,4 +1,4 @@
-export type ViewMode = 'feed' | 'timeline';
+export type ViewMode = 'feed' | 'timeline' | 'map';
 
 type Props = {
   mode: ViewMode;
@@ -6,6 +6,7 @@ type Props = {
   subjectName: string | null;
   feedCount: number;
   timelineCount: number;
+  mapCount: number;
 };
 
 export function ViewToggle({
@@ -14,6 +15,7 @@ export function ViewToggle({
   subjectName,
   feedCount,
   timelineCount,
+  mapCount,
 }: Props) {
   return (
     <div className="inline-flex self-start rounded-md border border-slate-800 bg-slate-900/70 p-0.5">
@@ -29,6 +31,15 @@ export function ViewToggle({
       >
         {subjectName ? `${subjectName} timeline` : 'Timeline'}
         <Counter n={timelineCount} />
+      </Tab>
+      <Tab
+        active={mode === 'map'}
+        onClick={() => onChange('map')}
+        disabled={mapCount === 0}
+        title={mapCount === 0 ? 'No geolocated records' : undefined}
+      >
+        Map
+        <Counter n={mapCount} />
       </Tab>
     </div>
   );

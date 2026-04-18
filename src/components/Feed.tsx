@@ -44,7 +44,7 @@ export function Feed({
   const activePersonName = filters.personKey ? people.get(filters.personKey)?.displayName : null;
 
   return (
-    <section className="flex flex-col gap-3 min-h-0">
+    <section className="flex-1 min-h-0 flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-sm font-semibold">
           <span className="tabular-nums">{sorted.length}</span>{' '}

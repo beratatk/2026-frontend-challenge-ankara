@@ -56,7 +56,7 @@ export function Timeline({
   }
 
   return (
-    <section className="flex flex-col gap-3 min-h-0">
+    <section className="flex-1 min-h-0 flex flex-col gap-3">
       <TimelineHeader
         subject={subject}
         count={ordered.length}
