@@ -1,90 +1,215 @@
-import type { InvestigationEvent } from '@/lib/linking';
-import type { Person, PersonInvestigationProfile } from '@/lib/linking';
-import { Card, PersonChip, SectionTitle, SignalPill } from '@/components/atoms';
+import type { InsightBundle } from '@/lib/insights';
+import type { Filters } from '@/lib/filter';
+import type { RecordSource } from '@/types/records';
+import { SUBJECT_KEY } from '@/lib/linking';
+import { Card, PersonChip, SectionTitle, SignalPill, SourceBadge } from '@/components/atoms';
 import { fmtDateTime } from '@/lib/format';
 
 type Props = {
-  subject: Person | null;
-  podoTimeline: InvestigationEvent[];
-  profiles: PersonInvestigationProfile[];
+  insights: InsightBundle;
   onSelectPerson: (key: string) => void;
+  onSelectRecord: (id: string) => void;
+  onApplyFilters: (partial: Partial<Filters>) => void;
 };
 
-export function SummaryStrip({ subject, podoTimeline, profiles, onSelectPerson }: Props) {
-  const lastEvent = podoTimeline[podoTimeline.length - 1] ?? null;
-  const mostLinked = subject?.coOccurrences[0] ?? null;
-  const topLeads = profiles.filter((p) => p.signalScore > 0).slice(0, 3);
+export function SummaryStrip({
+  insights,
+  onSelectPerson,
+  onSelectRecord,
+  onApplyFilters,
+}: Props) {
+  const {
+    lastKnownLocation,
+    lastSeenWith,
+    mostLinked,
+    topLead,
+    podoSightings,
+    corroboratedTips,
+  } = insights;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 px-6 py-4 border-b border-slate-800">
-      <Card className="p-4">
-        <SectionTitle>Last known sighting</SectionTitle>
-        {lastEvent ? (
-          <div className="mt-2 space-y-1.5">
-            <p className="text-base font-medium">{lastEvent.location}</p>
-            <p className="text-xs text-slate-400 font-mono">{fmtDateTime(lastEvent.startAt)}</p>
-            <div className="flex flex-wrap gap-1 pt-1">
-              {lastEvent.participantKeys.map((k, i) => (
-                <PersonChip
-                  key={k}
-                  name={lastEvent.participantsDisplay[i]}
-                  onClick={() => onSelectPerson(k)}
-                />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <p className="mt-2 text-sm text-slate-500">No event with Podo found.</p>
-        )}
-      </Card>
-
-      <Card className="p-4">
-        <SectionTitle>Most linked contact</SectionTitle>
-        {mostLinked ? (
-          <div className="mt-2 space-y-1.5">
-            <p className="text-base font-medium">{mostLinked.displayName}</p>
-            <p className="text-xs text-slate-400">
-              appears with Podo in{' '}
-              <span className="text-slate-200 font-semibold tabular-nums">{mostLinked.count}</span>{' '}
-              records
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-fr gap-3 px-6 py-4 border-b border-slate-800">
+      {/* 1. Last known location */}
+      <InsightCard title="Last known location">
+        {lastKnownLocation ? (
+          <>
+            <p className="text-base font-semibold truncate">{lastKnownLocation.name}</p>
+            <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
+              <span>{fmtDateTime(lastKnownLocation.at)}</span>
+              <span>·</span>
+              <SourceBadge source={lastKnownLocation.source} />
             </p>
-            <div className="pt-1">
-              <PersonChip name={`Open ${mostLinked.displayName}`} onClick={() => onSelectPerson(mostLinked.key)} />
-            </div>
-          </div>
+            {lastKnownLocation.coords && (
+              <p className="text-[10px] font-mono text-slate-500 mt-0.5">
+                {lastKnownLocation.coords.lat.toFixed(4)}, {lastKnownLocation.coords.lng.toFixed(4)}
+              </p>
+            )}
+            <CardLink onClick={() => onSelectRecord(lastKnownLocation.recordId)}>
+              open record →
+            </CardLink>
+          </>
         ) : (
-          <p className="mt-2 text-sm text-slate-500">No co-occurrences yet.</p>
+          <EmptyNote>No location data for Podo.</EmptyNote>
         )}
-      </Card>
+      </InsightCard>
 
-      <Card className="p-4">
-        <SectionTitle>Top investigation leads</SectionTitle>
-        {topLeads.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No signals surfaced.</p>
+      {/* 2. Last seen with */}
+      <InsightCard title="Last seen with">
+        {lastSeenWith ? (
+          <>
+            {lastSeenWith.others.length === 0 ? (
+              <p className="text-sm text-slate-400">Alone at last event.</p>
+            ) : (
+              <div className="flex flex-wrap gap-1">
+                {lastSeenWith.others.map((p) => (
+                  <PersonChip
+                    key={p.key}
+                    name={p.displayName}
+                    onClick={() => onSelectPerson(p.key)}
+                  />
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-slate-400 mt-2">
+              {lastSeenWith.event.location} · {fmtDateTime(lastSeenWith.event.startAt)}
+            </p>
+          </>
         ) : (
-          <ol className="mt-2 space-y-1.5">
-            {topLeads.map((p) => (
-              <li key={p.person.key} className="flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => onSelectPerson(p.person.key)}
-                  className="flex items-center gap-2 text-left hover:text-amber-300"
-                >
-                  <span className="text-sm font-medium">{p.person.displayName}</span>
-                  <span className="text-[10px] text-slate-500">
-                    {p.signals.length} signal{p.signals.length === 1 ? '' : 's'} ·{' '}
-                    {p.linkedEvidenceCount} linked
-                  </span>
-                </button>
-                <SignalPill weight={p.signalScore} />
-              </li>
-            ))}
-          </ol>
+          <EmptyNote>No events recorded yet.</EmptyNote>
         )}
-        <p className="mt-2 text-[10px] text-slate-500 italic">
-          Investigation aid · not a verdict.
+      </InsightCard>
+
+      {/* 3. Most linked contact */}
+      <InsightCard title="Most linked contact">
+        {mostLinked ? (
+          <>
+            <p className="text-base font-semibold">{mostLinked.displayName}</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              appears with Podo{' '}
+              <span className="text-slate-200 font-semibold tabular-nums">
+                {mostLinked.count}
+              </span>
+              × across records
+            </p>
+            <CardLink onClick={() => onSelectPerson(mostLinked.key)}>
+              open profile →
+            </CardLink>
+          </>
+        ) : (
+          <EmptyNote>No co-occurrences yet.</EmptyNote>
+        )}
+      </InsightCard>
+
+      {/* 4. Highest investigation score */}
+      <InsightCard title="Highest investigation score">
+        {topLead ? (
+          <>
+            <div className="flex items-center gap-2">
+              <p className="text-base font-semibold truncate">
+                {topLead.profile.person.displayName}
+              </p>
+              <SignalPill weight={topLead.profile.signalScore} />
+            </div>
+            {topLead.profile.signals[0] && (
+              <p className="text-xs text-slate-300 mt-1 line-clamp-2">
+                {topLead.profile.signals[0].label}
+              </p>
+            )}
+            <p className="text-[10px] text-slate-500 mt-1 tabular-nums">
+              {topLead.profile.linkedEvidenceCount} linked evidence ·{' '}
+              {topLead.totalWithSignals}{' '}
+              {topLead.totalWithSignals === 1 ? 'person has' : 'people have'} signals
+            </p>
+            <div className="mt-auto pt-2 flex items-center justify-between">
+              <CardLink onClick={() => onSelectPerson(topLead.profile.person.key)}>
+                open profile →
+              </CardLink>
+              <span className="text-[9px] italic text-slate-500">aid, not verdict</span>
+            </div>
+          </>
+        ) : (
+          <EmptyNote>No suspicion signals raised.</EmptyNote>
+        )}
+      </InsightCard>
+
+      {/* 5. Sightings of Podo */}
+      <InsightCard title="Sightings of Podo">
+        <div className="flex items-baseline gap-2">
+          <p className="text-2xl font-semibold tabular-nums">{podoSightings.count}</p>
+          <p className="text-xs text-slate-400">
+            sighting{podoSightings.count === 1 ? '' : 's'}
+          </p>
+        </div>
+        <p className="text-xs text-slate-400 mt-0.5 tabular-nums">
+          {podoSightings.locations} location{podoSightings.locations === 1 ? '' : 's'} ·{' '}
+          {podoSightings.witnesses} witness{podoSightings.witnesses === 1 ? '' : 'es'}
         </p>
-      </Card>
+        {podoSightings.count > 0 && (
+          <CardLink
+            onClick={() =>
+              onApplyFilters({
+                sources: new Set<RecordSource>(['sighting']),
+                personKey: SUBJECT_KEY,
+              })
+            }
+          >
+            filter sightings →
+          </CardLink>
+        )}
+      </InsightCard>
+
+      {/* 6. Corroborated tips */}
+      <InsightCard title="Corroborated tips">
+        <div className="flex items-baseline gap-2">
+          <p className="text-2xl font-semibold tabular-nums">
+            {corroboratedTips.corroborated}
+            <span className="text-slate-500 text-base font-normal">
+              {' '}/ {corroboratedTips.total}
+            </span>
+          </p>
+        </div>
+        <p className="text-xs text-slate-400 mt-0.5">
+          tips whose suspect shares an event with Podo
+        </p>
+        {corroboratedTips.total === 0 ? (
+          <p className="text-[10px] text-slate-500 mt-1">No tips submitted yet.</p>
+        ) : (
+          <CardLink
+            onClick={() =>
+              onApplyFilters({ sources: new Set<RecordSource>(['tip']) })
+            }
+          >
+            filter tips →
+          </CardLink>
+        )}
+      </InsightCard>
     </div>
   );
+}
+
+// --------------------------- tiny internal helpers ---------------------------
+
+function InsightCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <Card className="p-3.5 flex flex-col">
+      <SectionTitle>{title}</SectionTitle>
+      <div className="mt-2 flex flex-col flex-1 min-h-0">{children}</div>
+    </Card>
+  );
+}
+
+function CardLink({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="mt-auto self-start pt-2 text-[11px] text-amber-300 hover:underline"
+    >
+      {children}
+    </button>
+  );
+}
+
+function EmptyNote({ children }: { children: React.ReactNode }) {
+  return <p className="text-sm text-slate-500">{children}</p>;
 }

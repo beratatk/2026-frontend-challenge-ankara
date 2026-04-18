@@ -20,6 +20,7 @@ export default function App() {
     profiles,
     subject,
     podoTimeline,
+    insights,
     isLoading,
     isFetching,
     error,
@@ -36,6 +37,8 @@ export default function App() {
   };
   const onSelectRecord = (id: string) => setSelection({ kind: 'record', id });
   const onClearSelection = () => setSelection(null);
+  const onApplyFilters = (partial: Partial<Filters>) =>
+    setFilters((prev) => ({ ...prev, ...partial }));
 
   const selectedRecordId = selection?.kind === 'record' ? selection.id : null;
   const selectedPersonKey = selection?.kind === 'person' ? selection.key : null;
@@ -75,10 +78,10 @@ export default function App() {
         isFetching={isFetching}
       />
       <SummaryStrip
-        subject={subject}
-        podoTimeline={podoTimeline}
-        profiles={profiles}
+        insights={insights}
         onSelectPerson={onSelectPerson}
+        onSelectRecord={onSelectRecord}
+        onApplyFilters={onApplyFilters}
       />
       <main className="flex-1 min-h-0 grid grid-cols-[260px_minmax(0,1fr)_440px] gap-4 px-6 py-4">
         <LeftRail

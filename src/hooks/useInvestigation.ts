@@ -9,6 +9,7 @@ import {
   buildProfiles,
   subjectTimeline,
 } from '@/lib/linking';
+import { computeInsights } from '@/lib/insights';
 import type { InvestigationRecord, RecordSource } from '@/types/records';
 
 const SOURCES: RecordSource[] = ['checkin', 'message', 'sighting', 'note', 'tip'];
@@ -42,6 +43,10 @@ export function useInvestigation() {
   );
   const podoTimeline = useMemo(() => subjectTimeline(events, SUBJECT_KEY), [events]);
   const subject = useMemo(() => people.get(SUBJECT_KEY) ?? null, [people]);
+  const insights = useMemo(
+    () => computeInsights(records, events, people, profiles, SUBJECT_KEY),
+    [records, events, people, profiles],
+  );
 
   return {
     records,
@@ -50,6 +55,7 @@ export function useInvestigation() {
     profiles,
     subject,
     podoTimeline,
+    insights,
     isLoading,
     isFetching,
     error,
