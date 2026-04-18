@@ -112,7 +112,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-x-hidden">
       <Header
         recordCount={records.length}
         peopleCount={people.size}

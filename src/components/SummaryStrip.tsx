@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { InsightBundle } from '@/lib/insights';
 import type { Filters } from '@/lib/filter';
 import type { RecordSource } from '@/types/records';
@@ -13,6 +14,8 @@ type Props = {
   onApplyFilters: (partial: Partial<Filters>) => void;
 };
 
+const STORAGE_KEY = 'podo:insights-open';
+
 export function SummaryStrip({
   insights,
   onSelectPerson,
@@ -20,6 +23,22 @@ export function SummaryStrip({
   onSelectLocation,
   onApplyFilters,
 }: Props) {
+  const [open, setOpen] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEY) !== 'false';
+    } catch {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, String(open));
+    } catch {
+      /* quota / private mode — ignore */
+    }
+  }, [open]);
+
   const {
     lastKnownLocation,
     lastSeenWith,
@@ -30,15 +49,23 @@ export function SummaryStrip({
   } = insights;
 
   return (
-    <div
-      className="
-        grid auto-rows-fr gap-3 border-b border-slate-800
-        px-4 sm:px-6 py-3 sm:py-4
-        grid-flow-col auto-cols-[80%] overflow-x-auto snap-x snap-mandatory
-        sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 sm:overflow-visible sm:snap-none
-        lg:grid-cols-3
-      "
-    >
+    <section className="border-b border-slate-800">
+      <CollapseHeader
+        open={open}
+        onToggle={() => setOpen((o) => !o)}
+        insights={insights}
+      />
+      {open && (
+        <div
+          id="insights-grid"
+          className="
+            grid auto-rows-fr gap-3
+            px-4 sm:px-6 pb-3 sm:pb-4
+            grid-flow-col auto-cols-[80%] overflow-x-auto snap-x snap-mandatory
+            sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 sm:overflow-visible sm:snap-none
+            lg:grid-cols-3
+          "
+        >
       {/* 1. Last known location */}
       <InsightCard title="Last known location">
         {lastKnownLocation ? (
@@ -199,11 +226,83 @@ export function SummaryStrip({
           </CardLink>
         )}
       </InsightCard>
-    </div>
+        </div>
+      )}
+    </section>
   );
 }
 
 // --------------------------- tiny internal helpers ---------------------------
+
+function CollapseHeader({
+  open,
+  onToggle,
+  insights,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  insights: InsightBundle;
+}) {
+  const summary = buildSummary(insights);
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      aria-controls="insights-grid"
+      className="w-full flex items-center gap-3 px-4 sm:px-6 py-2 text-left hover:bg-slate-900/40 transition-colors group"
+    >
+      <span className="text-[10px] uppercase tracking-[0.14em] text-amber-400/80 font-semibold shrink-0">
+        Key insights
+      </span>
+      {!open && summary && (
+        <span className="hidden sm:block text-[11px] text-slate-400 truncate min-w-0">
+          · {summary}
+        </span>
+      )}
+      <span className="ml-auto inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-slate-500 group-hover:text-slate-200 shrink-0">
+        <span className="hidden sm:inline">{open ? 'Collapse' : 'Expand'}</span>
+        <Chevron open={open} />
+      </span>
+    </button>
+  );
+}
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 12 12"
+      className={`w-3 h-3 transition-transform ${open ? '' : 'rotate-180'}`}
+      fill="none"
+    >
+      <path
+        d="M3 7.5 6 4.5 9 7.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function buildSummary(insights: InsightBundle): string | null {
+  const parts: string[] = [];
+  if (insights.lastKnownLocation) {
+    parts.push(`Last at ${insights.lastKnownLocation.name}`);
+  }
+  if (insights.topLead) {
+    parts.push(`Top lead ${insights.topLead.profile.person.displayName}`);
+  }
+  if (insights.podoSightings.count > 0) {
+    parts.push(
+      `${insights.podoSightings.count} sighting${insights.podoSightings.count === 1 ? '' : 's'}`,
+    );
+  }
+  return parts.length ? parts.join(' · ') : null;
+}
+
 
 function InsightCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
