@@ -9,6 +9,8 @@ import { Timeline } from '@/components/Timeline';
 import { MapView } from '@/components/MapView';
 import { ViewToggle, type ViewMode } from '@/components/ViewToggle';
 import { DetailPane } from '@/components/DetailPane';
+import { DetailDrawer } from '@/components/DetailDrawer';
+import { MobileTabs, type MobileTab } from '@/components/MobileTabs';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { ErrorScreen } from '@/components/ErrorScreen';
 import { PartialFailureBanner } from '@/components/PartialFailureBanner';
@@ -39,6 +41,7 @@ export default function App() {
   const [filters, setFilters] = useState<Filters>(emptyFilters);
   const [selection, setSelection] = useState<Selection>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('feed');
+  const [mobileTab, setMobileTab] = useState<MobileTab>('records');
 
   const filtered = useMemo(() => applyFilters(records, filters), [records, filters]);
 
@@ -63,8 +66,12 @@ export default function App() {
   const onSelectPerson = (key: string) => {
     setSelection({ kind: 'person', key });
     setFilters((f) => ({ ...f, personKey: key }));
+    setMobileTab('detail');
   };
-  const onSelectRecord = (id: string) => setSelection({ kind: 'record', id });
+  const onSelectRecord = (id: string) => {
+    setSelection({ kind: 'record', id });
+    setMobileTab('detail');
+  };
   const onClearSelection = () => setSelection(null);
   const onApplyFilters = (partial: Partial<Filters>) =>
     setFilters((prev) => ({ ...prev, ...partial }));
@@ -89,6 +96,21 @@ export default function App() {
     );
   }
 
+  const detailPaneProps = {
+    selection,
+    records,
+    people,
+    events,
+    profiles,
+    subject,
+    podoTimeline,
+    activeLocation: filters.location,
+    onClear: onClearSelection,
+    onSelectPerson,
+    onSelectRecord,
+    onSelectLocation,
+  };
+
   return (
     <div className="h-screen flex flex-col">
       <Header
@@ -109,17 +131,43 @@ export default function App() {
         onSelectLocation={onSelectLocation}
         onApplyFilters={onApplyFilters}
       />
-      <main className="flex-1 min-h-0 grid grid-cols-[260px_minmax(0,1fr)_440px] gap-4 px-6 py-4">
-        <LeftRail
-          records={records}
-          people={people}
-          profiles={profiles}
-          filters={filters}
-          setFilters={setFilters}
-          onSelectPerson={onSelectPerson}
-          selectedPersonKey={activePersonKey}
-        />
-        <div className="flex flex-col gap-3 min-h-0">
+      <MobileTabs
+        tab={mobileTab}
+        onChange={setMobileTab}
+        peopleCount={people.size}
+        recordCount={filtered.length}
+        hasSelection={selection !== null}
+      />
+      <main
+        className="
+          flex-1 min-h-0 flex flex-col
+          md:grid md:grid-cols-[240px_minmax(0,1fr)] md:gap-4 md:px-6 md:py-4
+          lg:grid-cols-[260px_minmax(0,1fr)_440px]
+        "
+      >
+        {/* LeftRail: sm tab, md+ always visible */}
+        <div
+          className={`min-h-0 px-4 pb-4 md:p-0 flex-col ${
+            mobileTab === 'people' ? 'flex flex-1' : 'hidden md:flex'
+          }`}
+        >
+          <LeftRail
+            records={records}
+            people={people}
+            profiles={profiles}
+            filters={filters}
+            setFilters={setFilters}
+            onSelectPerson={onSelectPerson}
+            selectedPersonKey={activePersonKey}
+          />
+        </div>
+
+        {/* Center column: sm tab, md+ always visible */}
+        <div
+          className={`min-h-0 px-4 pb-4 md:p-0 gap-3 flex-col ${
+            mobileTab === 'records' ? 'flex flex-1' : 'hidden md:flex'
+          }`}
+        >
           <ViewToggle
             mode={viewMode}
             onChange={setViewMode}
@@ -163,21 +211,26 @@ export default function App() {
             />
           )}
         </div>
-        <DetailPane
-          selection={selection}
-          records={records}
-          people={people}
-          events={events}
-          profiles={profiles}
-          subject={subject}
-          podoTimeline={podoTimeline}
-          activeLocation={filters.location}
-          onClear={onClearSelection}
-          onSelectPerson={onSelectPerson}
-          onSelectRecord={onSelectRecord}
-          onSelectLocation={onSelectLocation}
-        />
+
+        {/* DetailPane: inline on lg+, hidden below */}
+        <div className="hidden lg:flex flex-col min-h-0">
+          <DetailPane {...detailPaneProps} />
+        </div>
+
+        {/* DetailPane: sm tab version (md:hidden — md uses the drawer) */}
+        <div
+          className={`min-h-0 px-4 pb-4 md:hidden flex-col ${
+            mobileTab === 'detail' ? 'flex flex-1' : 'hidden'
+          }`}
+        >
+          <DetailPane {...detailPaneProps} />
+        </div>
       </main>
+
+      {/* DetailPane: md slide-over drawer (lg inline, sm uses tab) */}
+      <DetailDrawer open={selection !== null} onClose={onClearSelection}>
+        <DetailPane {...detailPaneProps} />
+      </DetailDrawer>
     </div>
   );
 }

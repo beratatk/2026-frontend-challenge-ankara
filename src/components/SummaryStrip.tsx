@@ -30,7 +30,15 @@ export function SummaryStrip({
   } = insights;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-fr gap-3 px-6 py-4 border-b border-slate-800">
+    <div
+      className="
+        grid auto-rows-fr gap-3 border-b border-slate-800
+        px-4 sm:px-6 py-3 sm:py-4
+        grid-flow-col auto-cols-[80%] overflow-x-auto snap-x snap-mandatory
+        sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 sm:overflow-visible sm:snap-none
+        lg:grid-cols-3
+      "
+    >
       {/* 1. Last known location */}
       <InsightCard title="Last known location">
         {lastKnownLocation ? (
@@ -199,7 +207,7 @@ export function SummaryStrip({
 
 function InsightCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Card className="p-3.5 flex flex-col">
+    <Card className="p-3.5 flex flex-col snap-start min-w-0">
       <SectionTitle>{title}</SectionTitle>
       <div className="mt-2 flex flex-col flex-1 min-h-0">{children}</div>
     </Card>
