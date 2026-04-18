@@ -30,7 +30,7 @@ export function HeroCard({
 
   return (
     <section className="px-4 sm:px-6 py-4">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col">
         {/* Identity row */}
         <div className="flex items-center gap-3 sm:gap-4">
           <button
@@ -81,9 +81,15 @@ export function HeroCard({
           </button>
         </div>
 
-        {/* Facts grid — hidden when compact */}
-        {!compact && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 pt-3 border-t border-slate-800/60">
+        {/* Facts grid — animated collapse via grid-rows trick */}
+        <div
+          className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+            compact ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'
+          }`}
+          aria-hidden={compact}
+        >
+          <div className="overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mt-4 pt-3 border-t border-slate-800/60">
           <FactBlock label="Last location">
             {lastKnownLocation ? (
               <>
@@ -141,8 +147,9 @@ export function HeroCard({
               across {sourcesUsed} source{sourcesUsed === 1 ? '' : 's'}
             </p>
           </FactBlock>
+            </div>
+          </div>
         </div>
-        )}
       </div>
     </section>
   );

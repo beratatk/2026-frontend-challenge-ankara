@@ -18,12 +18,17 @@ export function SummaryStrip({
   onApplyFilters,
   open,
 }: Props) {
-  if (!open) return null;
-
   const { mostLinked, topLead, podoSightings, corroboratedTips } = insights;
 
   return (
-    <div className="px-4 sm:px-6 pb-4 sm:pb-5">
+    <div
+      className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+        open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+      }`}
+      aria-hidden={!open}
+    >
+      <div className="overflow-hidden">
+        <div className="px-4 sm:px-6 pb-4 sm:pb-5">
       <div
         id="insights-grid"
         className="
@@ -120,6 +125,8 @@ export function SummaryStrip({
           </InlineLink>
         )}
       </FactBlock>
+      </div>
+        </div>
       </div>
     </div>
   );

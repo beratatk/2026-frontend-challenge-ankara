@@ -60,6 +60,29 @@ export default function App() {
     setPanelOpen(false);
   }, [filterSignature]);
 
+  // Auto-collapse insights panel only when the user actively scrolls DOWN.
+  // We compare against the last seen scrollTop per-element so that layout
+  // shifts (e.g. expanding the panel itself) that re-fire scroll events at
+  // an unchanged scrollTop do not immediately re-collapse. scroll events do
+  // not bubble — capture-phase listener catches descendants.
+  const mainRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+    const lastTop = new WeakMap<HTMLElement, number>();
+    const onScroll = (e: Event) => {
+      const t = e.target;
+      if (!(t instanceof HTMLElement)) return;
+      const prev = lastTop.get(t) ?? 0;
+      const curr = t.scrollTop;
+      lastTop.set(t, curr);
+      if (curr > 24 && curr > prev) setPanelOpen(false);
+    };
+    main.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    return () =>
+      main.removeEventListener('scroll', onScroll, { capture: true } as EventListenerOptions);
+  }, []);
+
   const filtered = useMemo(() => applyFilters(records, filters), [records, filters]);
 
   // Timeline view always centers on the subject — other filters still apply.
@@ -84,10 +107,16 @@ export default function App() {
     setSelection({ kind: 'person', key });
     setFilters((f) => ({ ...f, personKey: key }));
     setMobileTab('detail');
+    setPanelOpen(false);
   };
   const onSelectRecord = (id: string) => {
     setSelection({ kind: 'record', id });
     setMobileTab('detail');
+    setPanelOpen(false);
+  };
+  const onChangeViewMode = (m: ViewMode) => {
+    setViewMode(m);
+    setPanelOpen(false);
   };
   const onClearSelection = () => setSelection(null);
   const onApplyFilters = (partial: Partial<Filters>) =>
@@ -194,6 +223,7 @@ export default function App() {
         hasSelection={selection !== null}
       />
       <main
+        ref={mainRef}
         className="
           flex-1 min-h-0 min-w-0 flex flex-col
           md:grid md:grid-cols-[240px_minmax(0,1fr)] md:gap-4 md:px-6 md:py-4
@@ -225,7 +255,7 @@ export default function App() {
         >
           <ViewToggle
             mode={viewMode}
-            onChange={setViewMode}
+            onChange={onChangeViewMode}
             subjectName={subject?.displayName ?? null}
             feedCount={filtered.length}
             timelineCount={timelineRecords.length}
