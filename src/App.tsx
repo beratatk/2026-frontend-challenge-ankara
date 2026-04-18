@@ -6,6 +6,9 @@ import { SummaryStrip } from '@/components/SummaryStrip';
 import { LeftRail } from '@/components/LeftRail';
 import { Feed } from '@/components/Feed';
 import { DetailPane } from '@/components/DetailPane';
+import { LoadingScreen } from '@/components/LoadingScreen';
+import { ErrorScreen } from '@/components/ErrorScreen';
+import { PartialFailureBanner } from '@/components/PartialFailureBanner';
 
 type Selection =
   | { kind: 'person'; key: string }
@@ -21,9 +24,13 @@ export default function App() {
     subject,
     podoTimeline,
     insights,
-    isLoading,
+    sourceStatus,
+    failedSources,
+    isInitialLoading,
     isFetching,
-    error,
+    isRetrying,
+    allFailed,
+    retryFailed,
   } = useInvestigation();
 
   const [filters, setFilters] = useState<Filters>(emptyFilters);
@@ -39,7 +46,6 @@ export default function App() {
   const onClearSelection = () => setSelection(null);
   const onApplyFilters = (partial: Partial<Filters>) =>
     setFilters((prev) => ({ ...prev, ...partial }));
-  // Toggle location filter: clicking the same location clears it.
   const onSelectLocation = (loc: string) =>
     setFilters((f) => ({ ...f, location: f.location === loc ? null : loc }));
 
@@ -47,28 +53,17 @@ export default function App() {
   const selectedPersonKey = selection?.kind === 'person' ? selection.key : null;
   const activePersonKey = filters.personKey ?? selectedPersonKey;
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen grid place-items-center text-slate-400">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          Loading investigation data…
-        </div>
-      </div>
-    );
+  if (isInitialLoading) {
+    return <LoadingScreen sourceStatus={sourceStatus} />;
   }
 
-  if (error) {
+  if (allFailed) {
     return (
-      <div className="min-h-screen grid place-items-center p-8">
-        <div className="max-w-md rounded-lg border border-rose-500/40 bg-rose-500/10 p-6 text-rose-200">
-          <p className="font-semibold">Failed to load data</p>
-          <p className="text-sm mt-1 text-rose-300/80">{error.message}</p>
-          <p className="text-xs mt-3 text-rose-200/60">
-            Check your <code>.env.local</code> API keys and form IDs, then refresh.
-          </p>
-        </div>
-      </div>
+      <ErrorScreen
+        failedSources={failedSources}
+        isRetrying={isRetrying}
+        onRetry={retryFailed}
+      />
     );
   }
 
@@ -79,6 +74,11 @@ export default function App() {
         peopleCount={people.size}
         eventCount={events.length}
         isFetching={isFetching}
+      />
+      <PartialFailureBanner
+        failedSources={failedSources}
+        isRetrying={isRetrying}
+        onRetry={retryFailed}
       />
       <SummaryStrip
         insights={insights}

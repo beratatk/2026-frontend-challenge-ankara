@@ -14,6 +14,15 @@ import type { InvestigationRecord, RecordSource } from '@/types/records';
 
 const SOURCES: RecordSource[] = ['checkin', 'message', 'sighting', 'note', 'tip'];
 
+export type SourceLoadState = {
+  source: RecordSource;
+  status: 'loading' | 'success' | 'error';
+  isFetching: boolean;
+  error: Error | null;
+  count: number;
+  refetch: () => void;
+};
+
 export function useInvestigation() {
   const results = useQueries({
     queries: SOURCES.map((source) => ({
@@ -25,16 +34,40 @@ export function useInvestigation() {
     })),
   });
 
-  const isLoading = results.some((r) => r.isLoading);
-  const isFetching = results.some((r) => r.isFetching);
-  const error = (results.find((r) => r.error)?.error as Error | undefined) ?? null;
+  const sourceStatus: SourceLoadState[] = SOURCES.map((source, i) => {
+    const r = results[i];
+    const status: 'loading' | 'success' | 'error' =
+      r.status === 'pending' ? 'loading' : r.status === 'error' ? 'error' : 'success';
+    return {
+      source,
+      status,
+      isFetching: r.isFetching,
+      error: (r.error as Error | null) ?? null,
+      count: r.data?.length ?? 0,
+      refetch: () => {
+        void r.refetch();
+      },
+    };
+  });
 
+  const isInitialLoading = sourceStatus.some((s) => s.status === 'loading');
+  const isFetching = sourceStatus.some((s) => s.isFetching);
+  const failedSources = sourceStatus.filter((s) => s.status === 'error');
+  const successCount = sourceStatus.filter((s) => s.status === 'success').length;
+  const hasAnyData = successCount > 0;
+  const allFailed = !isInitialLoading && successCount === 0;
+  const isRetrying = failedSources.some((s) => s.isFetching);
+
+  const retryFailed = () => {
+    for (const s of sourceStatus) if (s.status === 'error') s.refetch();
+  };
+
+  // Derivations run over whatever succeeded — partial data still renders a usable app.
   const records = useMemo(
     () => results.flatMap((r) => r.data ?? []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [results.map((r) => r.dataUpdatedAt).join('|')],
   );
-
   const people = useMemo(() => buildPeopleIndex(records), [records]);
   const events = useMemo(() => buildEvents(records), [records]);
   const profiles = useMemo(
@@ -56,8 +89,13 @@ export function useInvestigation() {
     subject,
     podoTimeline,
     insights,
-    isLoading,
+    sourceStatus,
+    failedSources,
+    isInitialLoading,
     isFetching,
-    error,
+    isRetrying,
+    hasAnyData,
+    allFailed,
+    retryFailed,
   };
 }
