@@ -3,14 +3,11 @@ import type { InsightBundle } from '@/lib/insights';
 import type { Filters } from '@/lib/filter';
 import type { RecordSource } from '@/types/records';
 import { SUBJECT_KEY } from '@/lib/linking';
-import { Card, PersonChip, SectionTitle, SignalPill, SourceBadge } from '@/components/atoms';
-import { fmtDateTime } from '@/lib/format';
+import { Card, SectionTitle, SignalPill } from '@/components/atoms';
 
 type Props = {
   insights: InsightBundle;
   onSelectPerson: (key: string) => void;
-  onSelectRecord: (id: string) => void;
-  onSelectLocation: (loc: string) => void;
   onApplyFilters: (partial: Partial<Filters>) => void;
 };
 
@@ -19,13 +16,17 @@ const STORAGE_KEY = 'podo:insights-open';
 export function SummaryStrip({
   insights,
   onSelectPerson,
-  onSelectRecord,
-  onSelectLocation,
   onApplyFilters,
 }: Props) {
   const [open, setOpen] = useState<boolean>(() => {
     try {
-      return localStorage.getItem(STORAGE_KEY) !== 'false';
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored !== null) return stored !== 'false';
+      // Default: expanded on sm+ (enough vertical space), collapsed on mobile
+      // so the Feed below stays visible. User's toggle is then persisted.
+      return typeof window !== 'undefined'
+        ? window.matchMedia('(min-width: 640px)').matches
+        : true;
     } catch {
       return true;
     }
@@ -39,22 +40,11 @@ export function SummaryStrip({
     }
   }, [open]);
 
-  const {
-    lastKnownLocation,
-    lastSeenWith,
-    mostLinked,
-    topLead,
-    podoSightings,
-    corroboratedTips,
-  } = insights;
+  const { mostLinked, topLead, podoSightings, corroboratedTips } = insights;
 
   return (
-    <section className="border-b border-slate-800">
-      <CollapseHeader
-        open={open}
-        onToggle={() => setOpen((o) => !o)}
-        insights={insights}
-      />
+    <section className="relative border-b border-slate-800">
+      <InsightsHeader open={open} insights={insights} />
       {open && (
         <div
           id="insights-grid"
@@ -63,195 +53,148 @@ export function SummaryStrip({
             px-4 sm:px-6 pb-3 sm:pb-4
             grid-flow-col auto-cols-[80%] overflow-x-auto snap-x snap-mandatory
             sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 sm:overflow-visible sm:snap-none
-            lg:grid-cols-3
+            lg:grid-cols-4
           "
         >
-      {/* 1. Last known location */}
-      <InsightCard title="Last known location">
-        {lastKnownLocation ? (
-          <>
-            <button
-              type="button"
-              onClick={() => onSelectLocation(lastKnownLocation.name)}
-              className="text-base font-semibold truncate text-left hover:text-amber-300"
-            >
-              {lastKnownLocation.name}
-            </button>
-            <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
-              <span>{fmtDateTime(lastKnownLocation.at)}</span>
-              <span>·</span>
-              <SourceBadge source={lastKnownLocation.source} />
-            </p>
-            {lastKnownLocation.coords && (
-              <p className="text-[10px] font-mono text-slate-500 mt-0.5">
-                {lastKnownLocation.coords.lat.toFixed(4)}, {lastKnownLocation.coords.lng.toFixed(4)}
-              </p>
-            )}
-            <CardLink onClick={() => onSelectRecord(lastKnownLocation.recordId)}>
-              open record →
-            </CardLink>
-          </>
-        ) : (
-          <EmptyNote>No location data for Podo.</EmptyNote>
-        )}
-      </InsightCard>
-
-      {/* 2. Last seen with */}
-      <InsightCard title="Last seen with">
-        {lastSeenWith ? (
-          <>
-            {lastSeenWith.others.length === 0 ? (
-              <p className="text-sm text-slate-400">Alone at last event.</p>
+          {/* Most linked contact */}
+          <InsightCard title="Most linked contact">
+            {mostLinked ? (
+              <>
+                <p className="text-base font-semibold">{mostLinked.displayName}</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  appears with Podo{' '}
+                  <span className="text-slate-200 font-semibold tabular-nums">
+                    {mostLinked.count}
+                  </span>
+                  × across records
+                </p>
+                <CardLink onClick={() => onSelectPerson(mostLinked.key)}>
+                  open profile →
+                </CardLink>
+              </>
             ) : (
-              <div className="flex flex-wrap gap-1">
-                {lastSeenWith.others.map((p) => (
-                  <PersonChip
-                    key={p.key}
-                    name={p.displayName}
-                    onClick={() => onSelectPerson(p.key)}
-                  />
-                ))}
-              </div>
+              <EmptyNote>No co-occurrences yet.</EmptyNote>
             )}
-            <p className="text-xs text-slate-400 mt-2">
-              {lastSeenWith.event.location} · {fmtDateTime(lastSeenWith.event.startAt)}
-            </p>
-          </>
-        ) : (
-          <EmptyNote>No events recorded yet.</EmptyNote>
-        )}
-      </InsightCard>
+          </InsightCard>
 
-      {/* 3. Most linked contact */}
-      <InsightCard title="Most linked contact">
-        {mostLinked ? (
-          <>
-            <p className="text-base font-semibold">{mostLinked.displayName}</p>
-            <p className="text-xs text-slate-400 mt-0.5">
-              appears with Podo{' '}
-              <span className="text-slate-200 font-semibold tabular-nums">
-                {mostLinked.count}
-              </span>
-              × across records
-            </p>
-            <CardLink onClick={() => onSelectPerson(mostLinked.key)}>
-              open profile →
-            </CardLink>
-          </>
-        ) : (
-          <EmptyNote>No co-occurrences yet.</EmptyNote>
-        )}
-      </InsightCard>
+          {/* Highest investigation score */}
+          <InsightCard title="Highest investigation score">
+            {topLead ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <p className="text-base font-semibold truncate">
+                    {topLead.profile.person.displayName}
+                  </p>
+                  <SignalPill weight={topLead.profile.signalScore} />
+                </div>
+                {topLead.profile.signals[0] && (
+                  <p className="text-xs text-slate-300 mt-1 line-clamp-2">
+                    {topLead.profile.signals[0].label}
+                  </p>
+                )}
+                <p className="text-[10px] text-slate-500 mt-1 tabular-nums">
+                  {topLead.profile.linkedEvidenceCount} linked evidence ·{' '}
+                  {topLead.totalWithSignals}{' '}
+                  {topLead.totalWithSignals === 1 ? 'person has' : 'people have'} signals
+                </p>
+                <div className="mt-auto pt-2 flex items-center justify-between">
+                  <CardLink onClick={() => onSelectPerson(topLead.profile.person.key)}>
+                    open profile →
+                  </CardLink>
+                  <span className="text-[9px] italic text-slate-500">aid, not verdict</span>
+                </div>
+              </>
+            ) : (
+              <EmptyNote>No suspicion signals raised.</EmptyNote>
+            )}
+          </InsightCard>
 
-      {/* 4. Highest investigation score */}
-      <InsightCard title="Highest investigation score">
-        {topLead ? (
-          <>
-            <div className="flex items-center gap-2">
-              <p className="text-base font-semibold truncate">
-                {topLead.profile.person.displayName}
+          {/* Sightings of Podo */}
+          <InsightCard title="Sightings of Podo">
+            <div className="flex items-baseline gap-2">
+              <p className="text-2xl font-semibold tabular-nums">{podoSightings.count}</p>
+              <p className="text-xs text-slate-400">
+                sighting{podoSightings.count === 1 ? '' : 's'}
               </p>
-              <SignalPill weight={topLead.profile.signalScore} />
             </div>
-            {topLead.profile.signals[0] && (
-              <p className="text-xs text-slate-300 mt-1 line-clamp-2">
-                {topLead.profile.signals[0].label}
-              </p>
-            )}
-            <p className="text-[10px] text-slate-500 mt-1 tabular-nums">
-              {topLead.profile.linkedEvidenceCount} linked evidence ·{' '}
-              {topLead.totalWithSignals}{' '}
-              {topLead.totalWithSignals === 1 ? 'person has' : 'people have'} signals
+            <p className="text-xs text-slate-400 mt-0.5 tabular-nums">
+              {podoSightings.locations} location{podoSightings.locations === 1 ? '' : 's'} ·{' '}
+              {podoSightings.witnesses} witness{podoSightings.witnesses === 1 ? '' : 'es'}
             </p>
-            <div className="mt-auto pt-2 flex items-center justify-between">
-              <CardLink onClick={() => onSelectPerson(topLead.profile.person.key)}>
-                open profile →
+            {podoSightings.count > 0 && (
+              <CardLink
+                onClick={() =>
+                  onApplyFilters({
+                    sources: new Set<RecordSource>(['sighting']),
+                    personKey: SUBJECT_KEY,
+                  })
+                }
+              >
+                filter sightings →
               </CardLink>
-              <span className="text-[9px] italic text-slate-500">aid, not verdict</span>
+            )}
+          </InsightCard>
+
+          {/* Corroborated tips */}
+          <InsightCard title="Corroborated tips">
+            <div className="flex items-baseline gap-2">
+              <p className="text-2xl font-semibold tabular-nums">
+                {corroboratedTips.corroborated}
+                <span className="text-slate-500 text-base font-normal">
+                  {' '}/ {corroboratedTips.total}
+                </span>
+              </p>
             </div>
-          </>
-        ) : (
-          <EmptyNote>No suspicion signals raised.</EmptyNote>
-        )}
-      </InsightCard>
-
-      {/* 5. Sightings of Podo */}
-      <InsightCard title="Sightings of Podo">
-        <div className="flex items-baseline gap-2">
-          <p className="text-2xl font-semibold tabular-nums">{podoSightings.count}</p>
-          <p className="text-xs text-slate-400">
-            sighting{podoSightings.count === 1 ? '' : 's'}
-          </p>
-        </div>
-        <p className="text-xs text-slate-400 mt-0.5 tabular-nums">
-          {podoSightings.locations} location{podoSightings.locations === 1 ? '' : 's'} ·{' '}
-          {podoSightings.witnesses} witness{podoSightings.witnesses === 1 ? '' : 'es'}
-        </p>
-        {podoSightings.count > 0 && (
-          <CardLink
-            onClick={() =>
-              onApplyFilters({
-                sources: new Set<RecordSource>(['sighting']),
-                personKey: SUBJECT_KEY,
-              })
-            }
-          >
-            filter sightings →
-          </CardLink>
-        )}
-      </InsightCard>
-
-      {/* 6. Corroborated tips */}
-      <InsightCard title="Corroborated tips">
-        <div className="flex items-baseline gap-2">
-          <p className="text-2xl font-semibold tabular-nums">
-            {corroboratedTips.corroborated}
-            <span className="text-slate-500 text-base font-normal">
-              {' '}/ {corroboratedTips.total}
-            </span>
-          </p>
-        </div>
-        <p className="text-xs text-slate-400 mt-0.5">
-          tips whose suspect shares an event with Podo
-        </p>
-        {corroboratedTips.total === 0 ? (
-          <p className="text-[10px] text-slate-500 mt-1">No tips submitted yet.</p>
-        ) : (
-          <CardLink
-            onClick={() =>
-              onApplyFilters({ sources: new Set<RecordSource>(['tip']) })
-            }
-          >
-            filter tips →
-          </CardLink>
-        )}
-      </InsightCard>
+            <p className="text-xs text-slate-400 mt-0.5">
+              tips whose suspect shares an event with Podo
+            </p>
+            {corroboratedTips.total === 0 ? (
+              <p className="text-[10px] text-slate-500 mt-1">No tips submitted yet.</p>
+            ) : (
+              <CardLink
+                onClick={() =>
+                  onApplyFilters({ sources: new Set<RecordSource>(['tip']) })
+                }
+              >
+                filter tips →
+              </CardLink>
+            )}
+          </InsightCard>
         </div>
       )}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls="insights-grid"
+        aria-label={open ? 'Collapse key insights' : 'Expand key insights'}
+        className="
+          absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0 z-10
+          inline-flex items-center justify-center w-7 h-7 rounded-full
+          bg-slate-950 border border-slate-800 text-slate-400
+          hover:text-amber-300 hover:border-slate-600
+          focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60
+          transition-colors
+        "
+      >
+        <Chevron open={open} />
+      </button>
     </section>
   );
 }
 
 // --------------------------- tiny internal helpers ---------------------------
 
-function CollapseHeader({
+function InsightsHeader({
   open,
-  onToggle,
   insights,
 }: {
   open: boolean;
-  onToggle: () => void;
   insights: InsightBundle;
 }) {
   const summary = buildSummary(insights);
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-expanded={open}
-      aria-controls="insights-grid"
-      className="w-full flex items-center gap-3 px-4 sm:px-6 py-2 text-left hover:bg-slate-900/40 transition-colors group"
-    >
+    <div className="flex items-center gap-3 px-4 sm:px-6 py-2">
       <span className="text-[10px] uppercase tracking-[0.14em] text-amber-400/80 font-semibold shrink-0">
         Key insights
       </span>
@@ -260,11 +203,7 @@ function CollapseHeader({
           · {summary}
         </span>
       )}
-      <span className="ml-auto inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-slate-500 group-hover:text-slate-200 shrink-0">
-        <span className="hidden sm:inline">{open ? 'Collapse' : 'Expand'}</span>
-        <Chevron open={open} />
-      </span>
-    </button>
+    </div>
   );
 }
 
@@ -289,9 +228,6 @@ function Chevron({ open }: { open: boolean }) {
 
 function buildSummary(insights: InsightBundle): string | null {
   const parts: string[] = [];
-  if (insights.lastKnownLocation) {
-    parts.push(`Last at ${insights.lastKnownLocation.name}`);
-  }
   if (insights.topLead) {
     parts.push(`Top lead ${insights.topLead.profile.person.displayName}`);
   }
@@ -300,9 +236,11 @@ function buildSummary(insights: InsightBundle): string | null {
       `${insights.podoSightings.count} sighting${insights.podoSightings.count === 1 ? '' : 's'}`,
     );
   }
+  if (insights.mostLinked) {
+    parts.push(`Most linked ${insights.mostLinked.displayName}`);
+  }
   return parts.length ? parts.join(' · ') : null;
 }
-
 
 function InsightCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (

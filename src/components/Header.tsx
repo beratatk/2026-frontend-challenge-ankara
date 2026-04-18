@@ -9,9 +9,6 @@ export function Header({ recordCount, peopleCount, eventCount, isFetching }: Pro
   return (
     <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
       <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-amber-400/80 font-semibold">
-          Investigation workspace
-        </p>
         <h1 className="text-base sm:text-lg font-semibold tracking-tight truncate">
           Missing Podo — Ankara Case
         </h1>
